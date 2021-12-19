@@ -2,7 +2,7 @@
 
 Class Redis{
     function config(){
-        $parameters = ['tcp://3.237.21.103?role=master', 'tcp://3.239.118.215', 'tcp://3.81.28.115'];
+        $parameters = ['tcp://44.200.147.5?role=master', 'tcp://3.239.13.6', 'tcp://3.236.115.209'];
         $options    = ['replication' => 'predis',
                         'databases'  => 0];
         

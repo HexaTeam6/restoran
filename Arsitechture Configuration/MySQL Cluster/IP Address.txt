@@ -1,0 +1,10 @@
+NDB Manager (mgmd)
+10.0.0.58
+
+Data Node (ndb)
+10.0.0.47
+10.0.0.51
+
+MySQL Node (mysqld)
+10.0.0.131
+10.0.0.224

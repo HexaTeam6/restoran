@@ -1,0 +1,44 @@
+1. Install redis
+sudo apt update
+sudo apt install redis-server -y
+
+2. Edit file konfigurasi
+sudo nano /etc/redis/redis.conf
+
+comment bagian 'bind 127.0.0.1 ::1'
+set 'protected-mode' to 'no'
+tambahkan konfigurasi 'slaveof' (di redis2 dan redis3 yang menjadi sebuah slave)
+
+3. Edit file konfigurasi sentinel
+sudo nano /etc/redis/sentinel.conf
+
+4. Restart redis
+sudo systemctl restart redis
+
+5. Menjalankan redis-sentinel untuk high availability
+sudo redis-server /etc/redis/sentinel.conf –sentinel
+
+6. Edit konfigurasi agar dapat dijalankan menjadi daemon
+sudo nano /etc/redis/sentinel.conf
+
+# append config berikut
+# Run in production with systemd
+logfile "/var/log/redis/sentinel.log"
+pidfile "/var/run/redis/sentinel.pid"
+daemonize yes
+
+7. Menambahkan Service
+sudo nano /etc/systemd/system/sentinel.service
+
+8. ubah permission
+sudo chown redis:redis /etc/redis/sentinel.conf
+sudo chown redis:redis /var/log/redis/sentinel.log
+sudo chmod 640 /etc/redis/sentinel.conf
+sudo chmod 660 /var/log/redis/sentinel.log
+
+9. reload dan aktifkan daemond
+sudo systemctl daemon-reload
+sudo systemctl enable sentinel.service
+
+10. cek status replikasi
+redis-cli info replication | grep role

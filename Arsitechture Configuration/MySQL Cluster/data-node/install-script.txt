@@ -1,0 +1,22 @@
+# Download package & install
+wget https://dev.mysql.com/get/Downloads/MySQL-Cluster-8.0/mysql-cluster-community-data-node_8.0.26-1ubuntu18.04_amd64.deb
+sudo dpkg -i mysql-cluster-community-data-node_8.0.26-1ubuntu18.04_amd64.deb
+
+# Edit konfigurasi
+sudo nano /etc/my.cnf
+
+# Membuat direktori daat
+sudo mkdir -p /usr/local/mysql/data
+
+# Testing
+sudo ndbd
+
+# Membuat service
+sudo pkill -f ndbd
+sudo nano /etc/systemd/system/ndbd.service
+
+# Mengaktifkan ndbd daemon
+sudo systemctl daemon-reload
+sudo systemctl enable ndbd
+sudo systemctl start ndbd
+sudo systemctl status ndbd
