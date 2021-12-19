@@ -12,6 +12,7 @@ class Groups extends Admin_Controller
 		
 
 		$this->load->model('model_groups');
+		$this->load->library('redis');
 	}
 
 	public function index()
@@ -20,7 +21,16 @@ class Groups extends Admin_Controller
             redirect('dashboard', 'refresh');
         }
 
-		$groups_data = $this->model_groups->getGroupData();
+		$redis = $this->redis->config();
+		
+		if($redis->get('groups')){
+			$groups_data = json_decode($redis->get('groups'), true);
+		}
+		else{
+			$groups_data = $this->model_groups->getGroupData();
+			$redis->setex('groups', 3600 ,json_encode($groups_data));
+		}
+
 		$this->data['groups_data'] = $groups_data;
 
 		$this->render_template('groups/index', $this->data);
@@ -45,6 +55,12 @@ class Groups extends Admin_Controller
 
         	$create = $this->model_groups->create($data);
         	if($create == true) {
+				$redis = $this->redis->config();
+
+				if($redis->get('groups')){
+					$redis->del('groups');
+				}
+
         		$this->session->set_flashdata('success', 'Successfully created');
         		redirect('groups/', 'refresh');
         	}
@@ -82,6 +98,12 @@ class Groups extends Admin_Controller
 
 	        	$update = $this->model_groups->edit($data, $id);
 	        	if($update == true) {
+					$redis = $this->redis->config();
+
+					if($redis->get('groups')){
+						$redis->del('groups');
+					}
+					
 	        		$this->session->set_flashdata('success', 'Successfully updated');
 	        		redirect('groups/', 'refresh');
 	        	}
@@ -118,6 +140,12 @@ class Groups extends Admin_Controller
 				else {
 					$delete = $this->model_groups->delete($id);
 					if($delete == true) {
+						$redis = $this->redis->config();
+
+						if($redis->get('groups')){
+							$redis->del('groups');
+						}
+
 		        		$this->session->set_flashdata('success', 'Successfully removed');
 		        		redirect('groups/', 'refresh');
 		        	}
