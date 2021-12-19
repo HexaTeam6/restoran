@@ -8,8 +8,9 @@ class Category extends Admin_Controller
 
 		$this->not_logged_in();
 		
-		$this->data['page_title'] = 'Users';
+		$this->data['page_title'] = 'Category';
 		$this->load->model('model_category');
+		$this->load->library('redis');
 	}
 
 	public function index()
@@ -21,7 +22,15 @@ class Category extends Admin_Controller
 	{
 		$result = array('data' => array());
 
-		$data = $this->model_category->getCategoryData();
+		$redis = $this->redis->config();
+		
+		if($redis->get('category')){
+			$data = json_decode($redis->get('category'), true);
+		}
+		else{
+			$data = $this->model_category->getCategoryData();
+			$redis->setex('category', 3600 ,json_encode($data));
+		}
 
 		foreach ($data as $key => $value) {
 			// button
@@ -68,6 +77,12 @@ class Category extends Admin_Controller
 
         	$create = $this->model_category->create($data);
         	if($create == true) {
+				$redis = $this->redis->config();
+
+				if($redis->get('category')){
+					$redis->del('category');
+				}
+
         		$response['success'] = true;
         		$response['messages'] = 'Succesfully created';
         	}
@@ -117,6 +132,12 @@ class Category extends Admin_Controller
 
 	        	$update = $this->model_category->update($id, $data);
 	        	if($update == true) {
+					$redis = $this->redis->config();
+
+					if($redis->get('category')){
+						$redis->del('category');
+					}
+
 	        		$response['success'] = true;
 	        		$response['messages'] = 'Succesfully updated';
 	        	}
@@ -152,6 +173,12 @@ class Category extends Admin_Controller
 		if($category_id) {
 			$delete = $this->model_category->remove($category_id);
 			if($delete == true) {
+				$redis = $this->redis->config();
+
+				if($redis->get('category')){
+					$redis->del('category');
+				}
+
 				$response['success'] = true;
 				$response['messages'] = "Successfully removed";	
 			}
