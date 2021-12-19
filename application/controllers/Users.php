@@ -14,17 +14,25 @@ class Users extends Admin_Controller
 		$this->load->model('model_users');
 		$this->load->model('model_groups');
 		$this->load->model('model_stores2');
+		$this->load->library('redis');
 	}
 
 	public function index()
 	{
-
 		if(!in_array('viewUser', $this->permission)) {
-            redirect('dashboard', 'refresh');
+			redirect('dashboard', 'refresh');
         }
 
-		$user_data = $this->model_users->getUserData();
-
+		$redis = $this->redis->config();
+		
+		if($redis->get('users')){
+			$user_data = json_decode($redis->get('users'), true);
+		}
+		else{
+			$user_data = $this->model_users->getUserData();
+			$redis->setex('users', 3600 ,json_encode($user_data));
+		}
+			
 		$result = array();
 		foreach ($user_data as $k => $v) {
 
@@ -71,6 +79,12 @@ class Users extends Admin_Controller
 
         	$create = $this->model_users->create($data, $this->input->post('groups'));
         	if($create == true) {
+				$redis = $this->redis->config();
+
+				if($redis->get('users')){
+					$redis->del('users');
+				}
+
         		$this->session->set_flashdata('success', 'Successfully created');
         		redirect('users/', 'refresh');
         	}
@@ -129,6 +143,12 @@ class Users extends Admin_Controller
 
 		        	$update = $this->model_users->edit($data, $id, $this->input->post('groups'));
 		        	if($update == true) {
+						$redis = $this->redis->config();
+
+						if($redis->get('users')){
+							$redis->del('users');
+						}
+
 		        		$this->session->set_flashdata('success', 'Successfully created');
 		        		redirect('users/', 'refresh');
 		        	}
@@ -158,6 +178,12 @@ class Users extends Admin_Controller
 
 			        	$update = $this->model_users->edit($data, $id, $this->input->post('groups'));
 			        	if($update == true) {
+							$redis = $this->redis->config();
+
+							if($redis->get('users')){
+								$redis->del('users');
+							}
+
 			        		$this->session->set_flashdata('success', 'Successfully updated');
 			        		redirect('users/', 'refresh');
 			        	}
@@ -213,6 +239,12 @@ class Users extends Admin_Controller
 				
 					$delete = $this->model_users->delete($id);
 					if($delete == true) {
+
+						$redis = $this->redis->config();
+
+						if($redis->get('users')){
+							$redis->del('users');
+						}
 		        		$this->session->set_flashdata('success', 'Successfully removed');
 		        		redirect('users/', 'refresh');
 		        	}
@@ -275,6 +307,12 @@ class Users extends Admin_Controller
 
 		        	$update = $this->model_users->edit($data, $id, $this->input->post('groups'));
 		        	if($update == true) {
+						$redis = $this->redis->config();
+
+						if($redis->get('users')){
+							$redis->del('users');
+						}
+
 		        		$this->session->set_flashdata('success', 'Successfully updated');
 		        		redirect('users/setting/', 'refresh');
 		        	}
@@ -303,6 +341,12 @@ class Users extends Admin_Controller
 
 			        	$update = $this->model_users->edit($data, $id, $this->input->post('groups'));
 			        	if($update == true) {
+							$redis = $this->redis->config();
+
+							if($redis->get('users')){
+								$redis->del('users');
+							}
+
 			        		$this->session->set_flashdata('success', 'Successfully updated');
 			        		redirect('users/setting/', 'refresh');
 			        	}

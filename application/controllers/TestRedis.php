@@ -10,9 +10,9 @@ class TestRedis extends CI_Controller
 
 	public function index(){
 		$redis = $this->redis->config();
-		// $set = $redis->setex('iniKey3', 3600 ,'ini value');
+		$set = $redis->setex('iniKey3', 3600 ,'ini value');
 		// $get = $redis->get('iniKey3');
-		$redis->del('iniKey3');
+		// $redis->del('iniKey3');
 
 		// echo $get;
 	}
