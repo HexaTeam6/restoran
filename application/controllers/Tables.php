@@ -11,11 +11,23 @@ class Tables extends Admin_Controller
 		$this->data['page_title'] = 'Tables';
 		$this->load->model('model_tables');
 		$this->load->model('model_stores');
+		$this->load->library('redis');
 	}
 
 	public function index()
-	{	
-		$store_data = $this->model_stores->getActiveStore();
+	{
+		$result = array('data' => array());
+
+		$redis = $this->redis->config();
+		
+		if($redis->get('active_stores')){
+			$store_data = json_decode($redis->get('active_stores'), true);
+		}
+		else{
+			$store_data = $this->model_stores->getActiveStore();
+			$redis->setex('active_stores', 3600 ,json_encode($store_data));
+		}
+			
 		$this->data['store_data'] = $store_data;
 		$this->render_template('tables/index', $this->data);
 	}
@@ -28,7 +40,15 @@ class Tables extends Admin_Controller
 		
 		$result = array('data' => array());
 
-		$data = $this->model_tables->getTableData();
+		$redis = $this->redis->config();
+		
+		if($redis->get('tables')){
+			$data = json_decode($redis->get('tables'), true);
+		}
+		else{
+			$data = $this->model_tables->getTableData();
+			$redis->setex('tables', 3600 ,json_encode($data));
+		}
 
 		foreach ($data as $key => $value) {
 
@@ -87,6 +107,12 @@ class Tables extends Admin_Controller
 
         	$create = $this->model_tables->create($data);
         	if($create == true) {
+				$redis = $this->redis->config();
+
+				if($redis->get('tables')){
+					$redis->del('tables');
+				}
+
         		$response['success'] = true;
         		$response['messages'] = 'Succesfully created';
         	}
@@ -140,6 +166,12 @@ class Tables extends Admin_Controller
 
 	        	$update = $this->model_tables->update($id, $data);
 	        	if($update == true) {
+					$redis = $this->redis->config();
+
+					if($redis->get('tables')){
+						$redis->del('tables');
+					}
+
 	        		$response['success'] = true;
 	        		$response['messages'] = 'Succesfully updated';
 	        	}
@@ -175,6 +207,12 @@ class Tables extends Admin_Controller
 		if($table_id) {
 			$delete = $this->model_tables->remove($table_id);
 			if($delete == true) {
+				$redis = $this->redis->config();
+
+				if($redis->get('tables')){
+					$redis->del('tables');
+				}
+
 				$response['success'] = true;
 				$response['messages'] = "Successfully removed";	
 			}
