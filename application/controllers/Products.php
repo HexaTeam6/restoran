@@ -15,6 +15,7 @@ class Products extends Admin_Controller
 		$this->load->model('model_products');
 		$this->load->model('model_category');
 		$this->load->model('model_stores');
+        $this->load->library('redis');
 	}
 
     /* 
@@ -41,7 +42,15 @@ class Products extends Admin_Controller
         
 		$result = array('data' => array());
 
-		$data = $this->model_products->getProductData();
+        $redis = $this->redis->config();
+
+        if($redis->get('products')){
+			$data = json_decode($redis->get('products'), true);
+		}
+		else{
+			$data = $this->model_products->getProductData();
+			$redis->setex('products', 3600 ,json_encode($data));
+		}
 
 		foreach ($data as $key => $value) {
             $store_ids = json_decode($value['store_id']);
@@ -96,7 +105,16 @@ class Products extends Admin_Controller
 
         $company_currency = $this->company_currency();
         // get all the category 
-        $category_data = $this->model_category->getCategoryData();
+
+        $redis = $this->redis->config();
+
+        if($redis->get('category')){
+			$category_data = json_decode($redis->get('category'), true);
+		}
+		else{
+			$category_data = $this->model_category->getCategoryData();
+			$redis->setex('category', 3600 ,json_encode($category_data));
+		}
 
         $result = array();
         
@@ -200,6 +218,12 @@ class Products extends Admin_Controller
 
         	$create = $this->model_products->create($data);
         	if($create == true) {
+                $redis = $this->redis->config();
+
+				if($redis->get('products')){
+					$redis->del('products');
+				}
+
         		$this->session->set_flashdata('success', 'Successfully created');
         		redirect('products/', 'refresh');
         	}
@@ -297,6 +321,12 @@ class Products extends Admin_Controller
 
             $update = $this->model_products->update($data, $product_id);
             if($update == true) {
+                $redis = $this->redis->config();
+
+				if($redis->get('products')){
+					$redis->del('products');
+				}
+
                 $this->session->set_flashdata('success', 'Successfully updated');
                 redirect('products/', 'refresh');
             }
@@ -332,6 +362,12 @@ class Products extends Admin_Controller
         if($product_id) {
             $delete = $this->model_products->remove($product_id);
             if($delete == true) {
+                $redis = $this->redis->config();
+
+				if($redis->get('products')){
+					$redis->del('products');
+				}
+
                 $response['success'] = true;
                 $response['messages'] = "Successfully removed"; 
             }
