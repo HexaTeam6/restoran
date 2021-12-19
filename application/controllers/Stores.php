@@ -8,8 +8,9 @@ class Stores extends Admin_Controller
 
 		$this->not_logged_in();
 		
-		$this->data['page_title'] = 'Users';
+		$this->data['page_title'] = 'Stores';
 		$this->load->model('model_stores2');
+		$this->load->library('redis');
 	}
 
 	public function index()
@@ -29,7 +30,15 @@ class Stores extends Admin_Controller
 
 		$result = array('data' => array());
 
-		$data = $this->model_stores2->getStoresData();
+		$redis = $this->redis->config();
+		
+		if($redis->get('stores')){
+			$data = json_decode($redis->get('stores'), true);
+		}
+		else{
+			$data = $this->model_stores2->getStoresData();
+			$redis->setex('stores', 3600 ,json_encode($data));
+		}
 
 		foreach ($data as $key => $value) {
 			// button
@@ -76,6 +85,12 @@ class Stores extends Admin_Controller
 
         	$create = $this->model_stores2->create($data);
         	if($create == true) {
+				$redis = $this->redis->config();
+
+				if($redis->get('stores')){
+					$redis->del('stores');
+				}
+
         		$response['success'] = true;
         		$response['messages'] = 'Succesfully created';
         	}
@@ -125,6 +140,12 @@ class Stores extends Admin_Controller
 
 	        	$update = $this->model_stores2->update($id, $data);
 	        	if($update == true) {
+					$redis = $this->redis->config();
+
+					if($redis->get('stores')){
+						$redis->del('stores');
+					}
+
 	        		$response['success'] = true;
 	        		$response['messages'] = 'Succesfully updated';
 	        	}
@@ -160,6 +181,12 @@ class Stores extends Admin_Controller
 		if($store_id) {
 			$delete = $this->model_stores2->remove($store_id);
 			if($delete == true) {
+				$redis = $this->redis->config();
+
+				if($redis->get('stores')){
+					$redis->del('stores');
+				}
+
 				$response['success'] = true;
 				$response['messages'] = "Successfully removed";	
 			}
